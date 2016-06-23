@@ -43,17 +43,19 @@ def parse_arguments():
                 edges[2] = [(1,2), (2,6), (6,0), (1,6), (2, 6)]
 
             5. Generates two files
-                x = 0, y = 7
+                x = 1, y = 6
                 a(ssignment)1p(roblem1)1t(est)x.in 
                 x increments if there already exists prior in
                 Also order of edges are shuffled
+                All values are increased by one as vertices start from 1
+                according to course specification
                 a1p1t2.in [ a1p1t1.in already exists so 2]
                 8 10 [n, n+k]
-                1 2
-                3 4
+                2 3
+                4 5
                 ...
-                6 0
-                0 7 [ vertices you want to go from and to]
+                7 1
+                1 6 [ vertices you want to go from and to]
 
                 test number for .group will match .in, will overwrite 
                 a1p1t2.group 
