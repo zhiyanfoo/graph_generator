@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import sys
 import os
 
@@ -57,7 +55,7 @@ def parse_arguments():
                 6 0
                 0 7 [ vertices you want to go from and to]
 
-                for tx x will be same as in file, will overwrite other group file
+                test number for .group will match .in, will overwrite 
                 a1p1t2.group 
                 3, 4
                 1, 2, 6, 0
@@ -65,7 +63,7 @@ def parse_arguments():
 
             """)
         )
-    parser.add_argument('-n', type=int, help='number of verticies', default=10)
+    parser.add_argument('-n', type=int, help='number of vertices', default=10)
     parser.add_argument('-s', help='number and distribution of groups, for only one group enter 1',
             nargs='*',
             type=float,
@@ -147,10 +145,10 @@ def edges_to_str(edges):
 
 def split_vertices_to_str(split_vertices):
     """note that the specification used by the course requires vertices to start from 1, so everything is added by one"""
-    print(split_vertices)
+    # print(split_vertices)
     split_vertices_str = "\n".join([ " ".join(str(x+1) for x in vertices) 
         for vertices in split_vertices ])
-    print(split_vertices_str)
+    # print(split_vertices_str)
     return split_vertices_str
 
 def add_start_end(edges_str, n, k, x, y):
