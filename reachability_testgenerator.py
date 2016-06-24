@@ -66,13 +66,18 @@ def parse_arguments():
             """)
         )
     parser.add_argument('-n', type=int, help='number of vertices', default=10)
-    parser.add_argument('-s', help='number and distribution of groups, for only one group enter 1',
+    parser.add_argument('-s', 
+            help='number and distribution of groups, for only one group enter 1',
             nargs='*',
             type=float,
             default=[0.5])
     parser.add_argument('-k', type=int, help='number of additional vertices', default=4)
     parser.add_argument('-x', type=int, help='initial vertex', default=1)
     parser.add_argument('-y', help='destination vertex', default='last vertex')
+    parser.add_argument('-o', type=int, 
+            help='specify what number test it should be',
+            default='-1')
+
     args = parser.parse_args()
     return args
 
@@ -119,9 +124,12 @@ def add_extra_edges(edges, split_vertices, k, s):
     if complete_graph(len(split_vertices[-1])) - 1 < last_num_edges:
         raise ValueError("Graph cannot support {0} number of edges".format(k))
     new_edges_per_group.append(k - sum(new_edges_per_group))
+    # print(new_edges_per_group, k)
     for group, vertices, num_edges in zip(
             edges, split_vertices, new_edges_per_group):
         add_edges_to_group(group, vertices, num_edges)
+    # print(edges)
+    # print(len(edges[0]), len(edges[1]))
 
 def complete_graph(n):
     return n*(n-1)/2
@@ -129,6 +137,7 @@ def complete_graph(n):
 def add_edges_to_group(group, vertices, num_edges):
     # print(group, vertices, num_edges)
     required_size = len(group) + num_edges
+    # print("required_size : ", required_size)
     while len(group) != required_size:
         a = random.choice(vertices)
         b = random.choice(vertices)
@@ -142,7 +151,10 @@ def edges_to_str(edges):
     """note that the specification used by the course requires vertices to start from 1, so everything is added by one"""
     edges_flat = list(chain(*edges))
     random.shuffle(edges_flat)
+    # print(len(edges_flat))
     edges_str= "\n".join([ " ".join(str(x+1) for x in item) for item in edges_flat ])
+    # print("edges_str")
+    # print(edges_str)
     return edges_str
 
 def split_vertices_to_str(split_vertices):
@@ -153,8 +165,12 @@ def split_vertices_to_str(split_vertices):
     # print(split_vertices_str)
     return split_vertices_str
 
-def add_start_end(edges_str, n, k, x, y):
-    start = "{0} {1}\n".format(n, n+k)
+def add_start_end(edges_str, n, k, x, y, s):
+    if abs(s[0] - 1) < 0.0000001:
+        num_edges = n + k - 1
+    else:
+        num_edges = n + k - len(s) - 1
+    start = "{0} {1}\n".format(n, num_edges)
     end = "\n{0} {1}".format(x, y)
     in_str = start + edges_str + end
     return in_str
@@ -175,14 +191,18 @@ def str_to_file(string, dir_path, name):
     with open(os.path.join(dir_path, name), 'w') as outputFile:
         outputFile.write(string)
 
-def write_in_and_group(in_str, split_vertices_str):
-    i = 1
-    while True:
+def write_in_and_group(in_str, split_vertices_str, o):
+    if o == -1:
+        i = 1
+        while True:
+            in_name = "a1p1t{0}.in".format(i)
+            if in_name in os.listdir(file_dir):
+                i += 1
+            else:
+                break
+    else:
+        i = o
         in_name = "a1p1t{0}.in".format(i)
-        if in_name in os.listdir(file_dir):
-            i += 1
-        else:
-            break
     str_to_file(in_str, file_dir, in_name)
     str_to_file(split_vertices_str, file_dir, "a1p1t{0}.group".format(i))
 
@@ -208,8 +228,8 @@ def main():
         edges, split_vertices = morethanone_group(args, vertices)
     edges_str = edges_to_str(edges)
     split_vertices_str = split_vertices_to_str(split_vertices)
-    in_str = add_start_end(edges_str, args.n, args.k, args.x, y)
-    write_in_and_group(in_str, split_vertices_str)
+    in_str = add_start_end(edges_str, args.n, args.k, args.x, y, args.s)
+    write_in_and_group(in_str, split_vertices_str, args.o)
 
 if __name__ == "__main__":
     main()
