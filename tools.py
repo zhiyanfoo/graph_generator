@@ -9,11 +9,12 @@ random.seed(0)
 def graph_parser(parser):
     parser.add_argument('-d', 
             help=textwrap.dedent("""
-            There are two methods of specifiying groups
+            There are two methods of specifiying groups 
             The simpler one involves specifying number of vertices in each group
-            Example: 10 20 41
+            Example: 10 20 10 
             The second involves specifying total number and distribution
-            Example: 10 0.5
+            Example: 40 0.25 0.5
+            This produces the same graph
             distribution of last value is automatically calculated by 1 - f1 - f2 ...
             """),
             nargs='*',
@@ -22,11 +23,15 @@ def graph_parser(parser):
     parser.add_argument('-e',
             help=textwrap.dedent(
             """
-            There are two methods of specifiying edges
+            There are two methods of specifiying the 
+            additional edges to add to each group
             The simpler one involves specifying number of edges in each group
-            Example: 10 20 41
+            Example: 2 4 14 
+            This adds 2 edges to the first group 4 to the second 
+            and 14 to the third
             The second involves specifying total number and distribution
-            Example: 10 0.5
+            This examples does the same thing as the first
+            Example: 20 0.1 0.2
             distribution of last value is automatically calculated by 1 - f1 - f2 ...
 
             """),
