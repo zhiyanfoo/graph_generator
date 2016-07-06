@@ -31,7 +31,6 @@ def add_edges_to_group(group, vertices, num_edges):
         if new_edge not in group:
             group.append(new_edge)
 
-
 def main():
     name_template = "simple_graph{0}"
     simple_parser = argparse.ArgumentParser(
