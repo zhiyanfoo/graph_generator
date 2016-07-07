@@ -4,8 +4,6 @@ import textwrap
 import random
 from itertools import chain
 
-random.seed(0)
-
 def graph_parser(parser):
     parser.add_argument('-d', 
             help=textwrap.dedent("""
@@ -121,7 +119,7 @@ def groups_can_support_edges(split_vertices, additional_edges):
             raise ValueError(
                     "too many edges at group {0}. {1} edges".format(i, additional_edges[i]))
 
-###END OF GRAPH PARSER###
+### END OF GRAPH PARSER
 
 
 def split(vertices, ranges):
@@ -139,7 +137,7 @@ def link(split_vertices, linker):
     return edges
 
 
-###TO STRING METHODS###
+### TO STRING METHODS
 
 def edges_to_str(edges):
     """note that the specification used by the course requires vertices to start from 1, so everything is added by one"""
@@ -168,7 +166,7 @@ def last_line(coordinates):
     end = "\n{0} {1}".format(*coordinates)
     return end
 
-###FILE METHODS###
+### FILE METHODS
 def str_to_file(string, dir_path, name):
     with open(os.path.join(dir_path, name), 'w') as outputFile:
         outputFile.write(string)

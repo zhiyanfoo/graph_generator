@@ -8,6 +8,8 @@ import textwrap
 file_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, file_dir)
 
+random.seed()
+
 from tools import graph_parser, create_graph, link, edges_to_str, split_vertices_to_str, first_line, last_line, write_in_and_group
 
 def linker(group):

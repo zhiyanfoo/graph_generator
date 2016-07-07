@@ -7,14 +7,15 @@ import textwrap
 
 from itertools import chain
 
-file_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, file_dir)
+FILE_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, FILE_DIR)
 
-from tools import graph_parser, create_graph, link, edges_to_str, split_vertices_to_str, first_line, last_line, write_in_and_group
+from tools import edges_to_str, str_to_file
 
 from acyclicity import acyclic
 
-random.seed(0)
+random.seed()
+
 NAME_TEMPLATE = "directed_graph{0}"
 
 DESCRIPTION = """Create a direct acyclic graph"""
@@ -50,37 +51,88 @@ Generates two files
     1 6 [ vertices you want to go from and to specified by -c can be blank]
     """
 
-def parser():
+def create_parser():
     parser = argparse.ArgumentParser(
             formatter_class=argparse.RawTextHelpFormatter,
             description=DESCRIPTION,
             epilog=EPILOG)
-    parser.add_argument('-d',
+    parser.add_argument(
+            '-d',
+            "--distribution",
             type=int,
             nargs='*',
-            default=[6, 2],
-            help="""
+            help=textwrap.dedent("""
             specify num of vertices for each totally unconnected island
             Example: -d 4 5
             creates two groups, one with 4 vertices one with 5,
             with no edge between any of these two groups 
             CAVEAT: there might be more unconnected islands 
             than specified by -d but no less
-            """
+            """)
+            )
+    parser.add_argument(
+            '-e',
+            "--edges",
+            type=int,
+            nargs='*',
+            help=textwrap.dedent("""
+            specify num of edges for each totally unconnected island
+            Example: -e 9 3 
+            NOTICE: Must match num of islands specified by distribution.
+            --distribution 7 4 3 --edges 12 3 4 
+            MAX and MIN edges based on 'n' num vertices specified
+            max : (n-1)(n)/2
+            min : n-1
+            You might think this implies that each island will be connected
+            internally.
+            This is NOT the case. There are unlikely circumstances where
+            a node is just by itself even though it should be part of an
+            island. This might even happen frequently. But probably not.
+            """)
             )
 
+    parser.add_argument(
+            '-o',
+            type=int, 
+            help=textwrap.dedent("""
+            specify what number in name of file, 
+            if none specified increments number until no
+            conflicting name in the current directory
+            name template : {0}
+            """.format(NAME_TEMPLATE)),
+            default=-1)
+    return parser
+
+def get_input():
+    parser = create_parser()
+    args = parser.parse_args()
+    islands = args.distribution
+    if islands is None:
+        raise ValueError("Did not specify --distribution")
+    num_edges = args.edges
+    if num_edges is None:
+        raise ValueError("Did not specify --edges")
+    o = args.o
+    return num_edges, islands, o
+
+def process(islands, num_edges):
+    adj_li = create_acyclic_graph(islands, num_edges)
+    edges_li = [ adj_to_edges(adj) for adj in adj_li ]
+    return edges_li
+
 def create_acyclic_graph(islands, num_edges):
-    adj = [[] for i in range(sum(islands)) ]
-    mapping = list(range(len(adj)))
-    mapping = random.shuffle(mapping)
-    results = [ create_island(num_vertices, num_edges)
+    mapping = list(range(sum(islands)))
+    random.shuffle(mapping)
+    adj_li= [ create_island(num_vertices, num_edges)
             for num_vertices,  num_edges in zip(islands, num_edges) ]
-    for adj in results:
+    new_adj_li = [ [ [ mapping[vertex] for vertex in vertices] 
+        for vertices in adj ] 
+        for  adj in adj_li ]
+    for adj in adj_li:
         assert not acyclic(adj)
-            
+    return new_adj_li
 
 def create_island(num_vertices, num_edges):
-    # print(num_edges, num_vertices)
     check_edge_vertices(num_vertices, num_edges)
     adj = [[] for i in range(num_vertices) ]
     tried = [[] for i in range(num_vertices) ]
@@ -98,9 +150,6 @@ def create_island(num_vertices, num_edges):
                          num_vertices,
                          num_edges))
         edge = random.sample(range(num_vertices), 2)
-        # print(edge)
-        # print("start adj")
-        # print(adj)
         if edge[1] in tried[edge[0]]:
             continue
         adj[edge[0]].append(edge[1])
@@ -138,10 +187,34 @@ def max_edges_DAG(n):
 def min_edges_DAG(n):
     return n-1
 
+def adj_to_edges(adj):
+    edges = [ [i, vertex] for i in range(len(adj)) for vertex in adj[i] ]
+    return edges
+
+def to_output(total_vertices, total_edges, edges_li, o):
+    edges_str = edges_to_str(edges_li)
+    output_str = "{0} {1}".format(total_vertices, total_edges) + edges_str
+    filename, _ = get_filename(o, NAME_TEMPLATE, FILE_DIR)
+    str_to_file(output_str, FILE_DIR, filename)
+
+def get_filename(o, name_template, file_dir):
+    if o == -1:
+        i = 1
+        while True:
+            filename = name_template.format(i) + ".in"
+            if filename in os.listdir(file_dir):
+                i += 1
+            else:
+                break
+    else:
+        i = o
+        filename = name_template.format(i) + ".in"
+    return filename, i
+
 def main():
-    islands = [112, 3]
-    num_edges = [1116, 2]
-    create_acyclic_graph(islands,num_edges)
+    num_edges, islands, o = get_input()
+    edges_li = process(islands, num_edges)
+    to_output(sum(num_edges), sum(islands), edges_li, o)
 
 if __name__ == "__main__":
     main()
