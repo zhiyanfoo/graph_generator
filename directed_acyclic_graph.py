@@ -10,11 +10,11 @@ from itertools import chain
 FILE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, FILE_DIR)
 
-from tools import edges_to_str, str_to_file
-
+from tools import str_to_file
 from acyclicity import acyclic
+from todot import to_dot_dir, create_image
 
-random.seed()
+# random.seed(1)
 
 NAME_TEMPLATE = "directed_graph{0}"
 
@@ -35,20 +35,13 @@ While adj has not enough edges:
 
 Once all islands compelete randomize the edge names
 
-Generates two files
+Files generated
     c = 1, 6 [ vertex intial and vertex final ]
     dagx.in 
     x increments if there already exists prior .in
     Also order of edges are shuffled
     Also all values are increased by one as vertices start from 1
     according to course specification
-    simple_graph2.in [ if for example simple_graph1.in already exists ]
-    8 10 [num vertices, num edges]
-    2 3
-    2 7
-    ...
-    4 5
-    1 6 [ vertices you want to go from and to specified by -c can be blank]
     """
 
 def create_parser():
@@ -87,7 +80,7 @@ def create_parser():
             internally.
             This is NOT the case. There are unlikely circumstances where
             a node is just by itself even though it should be part of an
-            island. This might even happen frequently. But probably not.
+            island.
             """)
             )
 
@@ -101,6 +94,14 @@ def create_parser():
             name template : {0}
             """.format(NAME_TEMPLATE)),
             default=-1)
+    parser.add_argument(
+            '-s',
+            "--show",
+            help=textwrap.dedent("""
+            If included creates image using graphviz
+            """.format(NAME_TEMPLATE)),
+            action="store_true"
+            )
     return parser
 
 def get_input():
@@ -113,24 +114,35 @@ def get_input():
     if num_edges is None:
         raise ValueError("Did not specify --edges")
     o = args.o
-    return num_edges, islands, o
+    s = bool(args.show)
+    return num_edges, islands, o, s
 
 def process(islands, num_edges):
-    adj_li = create_acyclic_graph(islands, num_edges)
-    edges_li = [ adj_to_edges(adj) for adj in adj_li ]
-    return edges_li
+    adj_list = create_acyclic_graph(islands, num_edges)
+    edges_list = adj_to_edges(adj_list)
+    return edges_list
 
 def create_acyclic_graph(islands, num_edges):
+    adj_lists = [ create_island(num_vertices, num_edges)
+            for num_vertices,  num_edges in zip(islands, num_edges) ]
+    to_add = [0]
+    for adj_list in adj_lists:
+        to_add.append(to_add[-1] + len(adj_list))
+    if len(adj_lists) > 1:
+        new_adj_lists = [ 
+                [ [vertex + to_add[i] for vertex in vertices ]
+                for vertices in adj_lists[i] ] 
+                for i in range(len(adj_lists))]
+    else:
+        new_adj_lists = adj_lists
     mapping = list(range(sum(islands)))
     random.shuffle(mapping)
-    adj_li= [ create_island(num_vertices, num_edges)
-            for num_vertices,  num_edges in zip(islands, num_edges) ]
-    new_adj_li = [ [ [ mapping[vertex] for vertex in vertices] 
-        for vertices in adj ] 
-        for  adj in adj_li ]
-    for adj in adj_li:
-        assert not acyclic(adj)
-    return new_adj_li
+    adj_list = [ vertices for adj_list in new_adj_lists for vertices in adj_list ]
+    random_adj = [None] * len(adj_list)
+    for i in range(len(adj_list)):
+        random_adj[mapping[i]] = [ mapping[vertex] for vertex in adj_list[i] ]
+    assert not acyclic(random_adj)
+    return random_adj
 
 def create_island(num_vertices, num_edges):
     check_edge_vertices(num_vertices, num_edges)
@@ -158,7 +170,6 @@ def create_island(num_vertices, num_edges):
         tried[edge[0]].append(edge[1])
         tried_counter += 1
     return adj
-
 
 def check_edge_vertices(num_vertices, num_edges):
     errmsg = ("number of edges specified : {0},"
@@ -191,11 +202,23 @@ def adj_to_edges(adj):
     edges = [ [i, vertex] for i in range(len(adj)) for vertex in adj[i] ]
     return edges
 
-def to_output(total_vertices, total_edges, edges_li, o):
-    edges_str = edges_to_str(edges_li)
-    output_str = "{0} {1}".format(total_vertices, total_edges) + edges_str
-    filename, _ = get_filename(o, NAME_TEMPLATE, FILE_DIR)
+def edges_to_str(edges_list):
+    random.shuffle(edges_list)
+    edges_str= "\n".join([ " ".join(str(x+1) for x in item) 
+        for item in edges_list ])
+    return edges_str
+
+
+def to_output(total_vertices, total_edges, edges_list, o, s):
+    edges_str = edges_to_str(edges_list)
+    output_str = "{0} {1}\n".format(total_vertices, total_edges) + edges_str
+    filename, i = get_filename(o, NAME_TEMPLATE, FILE_DIR)
     str_to_file(output_str, FILE_DIR, filename)
+    if s:
+        image_filename = NAME_TEMPLATE.format(i) + ".png"
+        dot_str = to_dot_dir(edges_list)
+        create_image(dot_str, image_filename)
+
 
 def get_filename(o, name_template, file_dir):
     if o == -1:
@@ -212,9 +235,10 @@ def get_filename(o, name_template, file_dir):
     return filename, i
 
 def main():
-    num_edges, islands, o = get_input()
-    edges_li = process(islands, num_edges)
-    to_output(sum(num_edges), sum(islands), edges_li, o)
+    num_edges, islands, o, s = get_input()
+    show = True
+    edges_list = process(islands, num_edges)
+    to_output(sum(num_edges), sum(islands), edges_list, o, s)
 
 if __name__ == "__main__":
     main()
