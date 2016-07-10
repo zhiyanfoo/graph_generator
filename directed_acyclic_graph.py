@@ -80,7 +80,7 @@ def create_parser():
             internally.
             This is NOT the case. There are unlikely circumstances where
             a node is just by itself even though it should be part of an
-            island.
+            island. SEE DISTRIBUTION CAVEAT
             """)
             )
 
@@ -101,6 +101,12 @@ def create_parser():
             If included creates image using graphviz
             """.format(NAME_TEMPLATE)),
             action="store_true"
+            )
+    simple_parser.add_argument(
+            '-c', 
+            type=int, 
+            help="inital and destination vertex",
+            nargs='*'
             )
     return parser
 
