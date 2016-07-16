@@ -102,7 +102,7 @@ def create_parser():
             """.format(NAME_TEMPLATE)),
             action="store_true"
             )
-    simple_parser.add_argument(
+    parser.add_argument(
             '-c', 
             type=int, 
             help="inital and destination vertex",
