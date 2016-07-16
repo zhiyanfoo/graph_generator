@@ -12,6 +12,8 @@ random.seed()
 
 from tools import graph_parser, create_graph, link, edges_to_str, split_vertices_to_str, first_line, last_line, write_in_and_group
 
+from todot import to_dot, create_image
+
 def linker(group):
     return [ set([group[i], group[i+1]]) for i in range(len(group) - 1) ]
 
@@ -102,6 +104,14 @@ def main():
             help="inital and destination vertex",
             nargs='*'
             )
+    simple_parser.add_argument(
+            '-s',
+            "--show",
+            help=textwrap.dedent("""
+            If included creates image using graphviz
+            """.format(name_template)),
+            action="store_true"
+            )
     args = simple_parser.parse_args()
     num_vertices, ranges, vertices, split_vertices, additional_edges = create_graph(args)
     edges = link(split_vertices, linker)
@@ -114,7 +124,15 @@ def main():
                     "num -c args is {0}, should be  2".format(len(args.c)))
         in_str += last_line(args.c)
     split_vertices_str = split_vertices_to_str(split_vertices)
-    write_in_and_group(in_str, split_vertices_str, file_dir, args.o, name_template)
+    i = write_in_and_group(in_str, split_vertices_str, file_dir, args.o, name_template)
+    flat_edges = [ list(edge) for edgesli in edges for edge in edgesli ]
+    s = bool(args.show)
+    if s:
+        image_filename = name_template.format(i) + ".png"
+        dot_str = to_dot(flat_edges, directed=False)
+        create_image(dot_str, image_filename)
+
+
 
 if __name__ == "__main__":
     main()

@@ -186,3 +186,4 @@ def write_in_and_group(in_str, split_vertices_str, file_dir, o, name_template):
     in_str += "\n"
     str_to_file(in_str, file_dir, in_name)
     str_to_file(split_vertices_str, file_dir, name_template.format(i) + ".group")
+    return i

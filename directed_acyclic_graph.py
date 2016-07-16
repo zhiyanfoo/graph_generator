@@ -12,7 +12,7 @@ sys.path.insert(0, FILE_DIR)
 
 from tools import str_to_file
 from acyclicity import acyclic
-from todot import to_dot_dir, create_image
+from todot import to_dot, create_image
 
 # random.seed(1)
 
@@ -222,7 +222,7 @@ def to_output(total_vertices, total_edges, edges_list, o, s):
     str_to_file(output_str, FILE_DIR, filename)
     if s:
         image_filename = NAME_TEMPLATE.format(i) + ".png"
-        dot_str = to_dot_dir(edges_list)
+        dot_str = to_dot(edges_list, directed=True)
         create_image(dot_str, image_filename)
 
 
